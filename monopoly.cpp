@@ -13,7 +13,7 @@ using namespace std;
 const int INF=1000;
 bool random=true;
 bool gameOver=false;
-
+int brute=0;
 //0==>pink  1==>blue   2==>green  3==>yellow  4==>white -1==>goverment
 class board;
 void buyPlace(board&,bool);
@@ -36,9 +36,20 @@ void inputint(int &x,int low=0,int high=1e9,bool dice=false){
         cout<<x<<' ';
         return;
     }
-    string s;cin>>s;
+    if(brute){
+        if(high==1)x=0;else x=6;
+        brute--;
+        return;
+    }
+    string s;cin>>s;bool autoMove=false;
     if(s=="108"){
         gameOver=true;return;
+    }
+    if(s.length()>1 && s[0]=='@'){
+        reverse(begin(s),end(s));
+        s.pop_back();
+        reverse(begin(s),end(s));
+        autoMove=true;
     }
     bool f=true;
     for(int i=0;i<s.length();i++){
@@ -49,7 +60,11 @@ void inputint(int &x,int low=0,int high=1e9,bool dice=false){
     }
 
     if(f){
+
         x=stoi(s);
+        if(autoMove){
+            brute+=x;return;
+        }
         if(x<low || x>high){
             cout<<"number is out of range please enter from {"<<low<<','<<high<<"}:";
             inputint(x,low,high);
@@ -229,7 +244,7 @@ class player{
     public:
         vector<int>rentLevel;
         vector<vector<int>>property;
-        int cash=20000;int assets=0;
+        int cash=49950;int assets=0;
         string name;
         int currentlocation=0;
         int stop=0;
@@ -346,16 +361,16 @@ class board{
             cout<<"Give party of Rs. 50/- to all other players ."<<endl;
             for(int i=0;i<numberofplayers;i++){
                 players[i].cash+=50;
+                players[currentplayer].cash-=50;
             }
-            players[currentplayer].cash-=100;
         }
         //REST HOUSE
         if(location[players[currentplayer].currentlocation].name=="REST HOUSE"){
             cout<<"Collect Rs. 50/- from each player and do rest ."<<endl;
             for(int i=0;i<numberofplayers;i++){
                 players[i].cash-=50;
+                players[currentplayer].cash+=50;
             }
-            players[currentplayer].cash+=100;
         }
         //JAIL
         if(location[players[currentplayer].currentlocation].name=="JAIL"){
@@ -461,9 +476,9 @@ void sellPlace(board & brd){
     int numberofhouses=0; 
     if(availablePlaces.size()==0){
         cout<<"You dont have any place of this type ."<<endl;return;
-    }
+    }cout<<"SELECT A PLACE :";
     for(int i=0;i<availablePlaces.size();i++){
-        cout<<"SELECT A PLACE :"<<i+1<<'.'<<names[availablePlaces[i]]<<"(Rs."<<brd.location[availablePlaces[i]].cost/2<<"/-)";
+        cout<<i+1<<'.'<<names[availablePlaces[i]]<<"(Rs."<<brd.location[availablePlaces[i]].cost/2<<"/-)";
         if(brd.house[availablePlaces[i]])numberofhouses++;
     }cout<<":";inputint(option,1,availablePlaces.size());
     int requiredMoney=brd.location[availablePlaces[option-1]].cost/2;
@@ -698,7 +713,7 @@ signed main(){
         if(brd.players[turn].stop>0){
             cout<<brd.players[turn].name<<" please stay in "<<brd.location[brd.players[turn].currentlocation].name<<" ."<<endl;
             brd.players[turn].stop--;movecount++;
-            system("pause");
+            if(!brute)system("pause");
             continue;
         }
         cout<<brd.players[turn].name<<"'s turn:";inputint(dice1,1,6,true);inputint(dice2,1,6,true);
@@ -715,11 +730,11 @@ signed main(){
         brd.payRent(dice1+dice2);
         brd.interaction();
         movecount++;
-        system("pause");
+        if(!brute)system("pause");
     }
     system("cls");
     for(int i=0;i<np;i++){
-        int marcketcapital=(brd.players[i].assets/2)+(brd.players[i].cash);
+        int marcketcapital=(brd.players[i].assets)+(brd.players[i].cash);
         cout<<brd.players[i].name<<" :: $ "<<marcketcapital<<" /-"<<endl;
     }
 return 0;
